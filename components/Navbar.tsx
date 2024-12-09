@@ -39,11 +39,9 @@ const Navbar = async () => {
                   Go to Dashboard
                 </span>
               </Link>
-              <Link href={`/user/${session?.user?.id}`}>
-                <span className="p-3  rounded-lg hover:shadow-md hover:shadow-black  transition-all ease-in-out delay-100">
-                  {session?.user?.name}
-                </span>
-              </Link>
+              <span className="p-3  rounded-lg hover:shadow-md hover:shadow-black hover:cursor-default  transition-all ease-in-out delay-100">
+                {session?.user?.name}
+              </span>
             </>
           ) : (
             <form
