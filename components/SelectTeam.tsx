@@ -123,7 +123,8 @@ const SelectTeam = () => {
           </h1>
         )}
         {firstTeam !== null && secondTeam !== null && (
-          <div className="rounded-lg p-6 justify-center flex flex-col items-center bg-black-0 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 font-semibold hover:cursor-default min-h-[265px]">
+          <div className="rounded-lg p-3 justify-center flex flex-col items-center bg-black-0 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 font-semibold hover:cursor-default min-h-[265px]">
+            <h1 className="mb-4">Upcoming Match</h1>
             <h1 className="rounded-md p-2 bottom-0 ">
               Match Day : {formatDate(Date())}
             </h1>

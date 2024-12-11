@@ -21,15 +21,14 @@ const StatKeepingComponent = ({
   const [dot, setDot] = useState<Dot>({ x: 0, y: 0, made: false });
   const [firstTeamScore, setFirstTeamScore] = useState(0);
   const [secondTeamScore, setSecondTeamScore] = useState(0);
-
   const handleImageClick = (event: any) => {
     const { offsetX, offsetY } = event.nativeEvent;
     const imageWidth = 820; // Assuming you know the image width
     const imageHeight = 380; // Assuming you know the image height
 
     // Calculate actual click position after rotation (consider image dimensions)
-    const actualX = imageHeight - offsetY + imageWidth + 472;
-    const actualY = offsetX;
+    const actualX = imageHeight - offsetY + imageWidth + 474;
+    const actualY = offsetX + 4;
 
     setDot({ y: actualY, x: actualX, made: false });
   };
@@ -41,31 +40,44 @@ const StatKeepingComponent = ({
     const pointsToAdd =
       selectedAction === "3-Points" ? 3 : selectedAction === "2-Points" ? 2 : 1;
 
-    // Determine the team
+    // Determine the correct team
     const team = firstTeamStats.some((p) => p.name === selected)
       ? "first"
       : "second";
 
-    // Update stats
     if (made) {
+      // Update the team's score
       if (team === "first") {
-        setFirstTeamScore(firstTeamScore + pointsToAdd);
+        setFirstTeamScore((prevScore) => prevScore + pointsToAdd);
       } else {
-        setSecondTeamScore(secondTeamScore + pointsToAdd);
+        setSecondTeamScore((prevScore) => prevScore + pointsToAdd);
       }
-      updatePlayerStats(team, selected, "points", pointsToAdd);
-      if (selectedAction === "3-pointer") {
-        updatePlayerStats(team, selected, "point_3", 1);
-      }
+
+      // Update player's field goal stats
+      const fieldGoalKey: keyof PlayerDuringGame["fieldGoals"] =
+        pointsToAdd === 3
+          ? "points_3"
+          : pointsToAdd === 2
+            ? "points_2"
+            : "points_1";
+
+      updatePlayerStats(team, selected, fieldGoalKey, {
+        value: pointsToAdd,
+        dot: { ...dot, made: true },
+      });
+    } else {
+      // Track missed shot
+      updatePlayerStats(team, selected, "missedShots", { value: 1, dot });
     }
   };
 
   const handlePlayerAction = (action: string) => {
     if (!selected) return;
-    console.log(action);
+
     // Determine the stat key and increment based on action
+
     const statMapping: {
-      [key: string]: "fouls" | "oRebounds" | "dRebounds" | "steals" | "blocks";
+      [key: string]: keyof PlayerDuringGame;
     } = {
       "O-Rebound": "oRebounds",
       "D-Rebound": "dRebounds",
@@ -75,6 +87,8 @@ const StatKeepingComponent = ({
     };
 
     const statKey = statMapping[action];
+    console.log(statKey);
+
     if (!statKey) return;
 
     // Determine the team
@@ -83,53 +97,101 @@ const StatKeepingComponent = ({
       : "second";
 
     // Update stats
-    updatePlayerStats(team, selected, statKey, 1);
+    updatePlayerStats(team, selected, statKey, { value: 1, dot });
   };
 
   const updatePlayerStats = (
     team: "first" | "second",
     playerName: string,
-    statKey:
-      | "points"
-      | "point_3"
-      | "fouls"
-      | "oRebounds"
-      | "dRebounds"
-      | "steals"
-      | "blocks",
-
-    incrementValue: number
+    statKey: keyof PlayerDuringGame | keyof PlayerDuringGame["fieldGoals"],
+    data: { value: number; dot: Dot }
   ) => {
     const stats = team === "first" ? firstTeamStats : secondTeamStats;
     const setStats = team === "first" ? setFirstTeamStats : setSecondTeamStats;
 
-    const updatedStats = stats.map((player) =>
-      player.name === playerName
-        ? { ...player, [statKey]: (player[statKey] as number) + incrementValue }
-        : player
-    );
+    const updatedStats = stats.map((player) => {
+      if (player.name !== playerName) return player;
+
+      // Handle field goals, fouls, rebounds, steals, blocks
+      if (statKey === "fouls") {
+        return {
+          ...player,
+          fouls: [...player.fouls, { foul: data.value, dot: data.dot }],
+        };
+      } else if (statKey === "oRebounds" || statKey === "dRebounds") {
+        return {
+          ...player,
+          [statKey]: [
+            ...player[statKey],
+            { rebound: data.value, dot: data.dot },
+          ],
+        };
+      } else if (statKey === "steals") {
+        return {
+          ...player,
+          steals: [...player.steals, { steal: data.value, dot: data.dot }],
+        };
+      } else if (statKey === "blocks") {
+        return {
+          ...player,
+          blocks: [...player.blocks, { block: data.value, dot: data.dot }],
+        };
+      } else if (
+        statKey === "points_2" ||
+        statKey === "points_3" ||
+        statKey === "points_1"
+      ) {
+        return {
+          ...player,
+          fieldGoals: {
+            ...player.fieldGoals,
+            [statKey]: [
+              ...player.fieldGoals[
+                statKey as keyof PlayerDuringGame["fieldGoals"]
+              ],
+              { point: data.value, dot: data.dot },
+            ],
+          },
+        };
+      } else if (statKey === "missedShots") {
+        return {
+          ...player,
+          missedShots: [
+            ...player.missedShots,
+            { missed: data.value, dot: data.dot },
+          ],
+        };
+      }
+
+      return player;
+    });
 
     setStats(updatedStats);
     setSelectedAction("");
     setSelected("");
+    setDot({ x: 0, y: 0, made: false });
   };
-  const handleCLick = () => {
-    console.log("first team: ", firstTeamStats);
-    console.log("second team: ", secondTeamStats);
+
+  const hanldeClick = () => {
+    console.log(firstTeamStats);
+    console.log(secondTeamStats);
   };
   useLayoutEffect(() => {
     const initializeTeamStats = (teamName: string) => {
       const team = getTeamByName(teamName);
       return team.startingFive.map((player) => ({
         name: player,
-        points: 0,
-        point_3: 0,
-        fouls: 0,
-        oRebounds: 0,
-        dRebounds: 0,
-        steals: 0,
-        blocks: 0,
-        missedShots: 0,
+        fieldGoals: {
+          points_2: [],
+          points_3: [],
+          points_1: [],
+        },
+        fouls: [],
+        oRebounds: [],
+        dRebounds: [],
+        steals: [],
+        blocks: [],
+        missedShots: [],
       }));
     };
     setFirstTeamStats(initializeTeamStats(firstTeam));
@@ -228,67 +290,70 @@ const StatKeepingComponent = ({
               </span>
             ))}
           </div>
-          <h2 className="mb-2 text-xl font-semibold">Assists</h2>
-          <div className="flex flex-wrap gap-6">
-            {assists.map((assist) => (
+          <div className="flex mt-4 flex-wrap gap-x-5">
+            <div className="flex flex-wrap gap-6">
+              {assists.map((assist) => (
+                <span
+                  key={assist}
+                  onClick={() => handlePlayerAction(assist)}
+                  className={
+                    selectedAction !== assist
+                      ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                      : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
+                  }
+                >
+                  {assist}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-6">
+              {steals.map((steal) => (
+                <span
+                  key={steal}
+                  onClick={() => handlePlayerAction(steal)}
+                  className={
+                    selectedAction !== steal
+                      ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                      : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
+                  }
+                >
+                  {steal}
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-6">
+              {blocks.map((block) => (
+                <span
+                  key={block}
+                  onClick={() => handlePlayerAction(block)}
+                  className={
+                    selectedAction !== block
+                      ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                      : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
+                  }
+                >
+                  {block}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-6">
               <span
-                key={assist}
-                onClick={() => handlePlayerAction(assist)}
+                onClick={() => handlePlayerAction("foul")}
                 className={
-                  selectedAction !== assist
+                  selectedAction !== "block"
                     ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
                     : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
                 }
               >
-                {assist}
+                Foul
               </span>
-            ))}
+            </div>
           </div>
-          <h2 className="mb-2 text-xl font-semibold">Steals</h2>
-          <div className="flex flex-wrap gap-6">
-            {steals.map((steal) => (
-              <span
-                key={steal}
-                onClick={() => handlePlayerAction(steal)}
-                className={
-                  selectedAction !== steal
-                    ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                    : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                }
-              >
-                {steal}
-              </span>
-            ))}
-          </div>
-          <h2 className="mb-2 text-xl font-semibold">Blocks</h2>
-          <div className="flex flex-wrap gap-6">
-            {blocks.map((block) => (
-              <span
-                key={block}
-                onClick={() => handlePlayerAction(block)}
-                className={
-                  selectedAction !== block
-                    ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                    : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                }
-              >
-                {block}
-              </span>
-            ))}
-          </div>
-          <h2 className="mb-2 text-xl font-semibold">Fouls</h2>
-          <div className="flex flex-wrap gap-6">
-            <span
-              onClick={() => handlePlayerAction("foul")}
-              className={
-                selectedAction !== "block"
-                  ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                  : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-              }
-            >
-              Foul
-            </span>
-          </div>
+          <button onClick={hanldeClick} className="text-xl">
+            Click
+          </button>
         </div>
       </section>
       <section className="mt-64">
@@ -318,7 +383,6 @@ const StatKeepingComponent = ({
           </>
         )}
       </section>
-      <button onClick={handleCLick}>CLick</button>
     </div>
   );
 };
