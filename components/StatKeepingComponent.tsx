@@ -5,6 +5,12 @@ import { writeClient } from "@/sanity/lib/write-client";
 import { Match, Player } from "@/sanity/types";
 import Image from "next/image";
 import React, { useState } from "react";
+import ImageWithDot from "./ImageWithDot";
+
+type DotPosition = {
+  x: number;
+  y: number;
+} | null;
 
 const StatKeepingComponent = ({
   firstTeam,
@@ -67,11 +73,15 @@ const StatKeepingComponent = ({
     }
   };
 
-  const handleImageClick = (event: React.MouseEvent) => {
-    const { offsetX, offsetY } = event.nativeEvent;
-    const actualX = offsetX;
-    const actualY = offsetY + 256; // Adjust based on image dimensions
-    setDot({ y: actualY, x: actualX, made: false });
+  const [dotPosition, setDotPosition] = useState<DotPosition>(null);
+
+  const handleImageClick = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    const rect = (e.target as HTMLDivElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setDotPosition({ x, y });
   };
 
   const handleFieldGoal = (made?: boolean) => {
@@ -354,28 +364,33 @@ const StatKeepingComponent = ({
           </ul>
         </div>
         <section>
-          <Image
-            src={"/court.jpg"}
-            alt="court"
-            width={920}
-            height={380}
-            className=""
+          <div
+            style={{ position: "relative", display: "inline-block" }}
             onClick={handleImageClick}
-          />
-          {dot && (
-            <div
-              style={{
-                position: "absolute",
-                right: dot.x,
-                top: dot.y,
-                width: "12px",
-                height: "12px",
-                // backgroundColor: "transparent",
-                borderRadius: "50%",
-              }}
-              className="scale-up-center bg-red-600"
-            ></div>
-          )}
+          >
+            <Image
+              src={"/court.jpg"}
+              alt="Click to place dot"
+              layout="intrinsic"
+              width={800}
+              height={600}
+              style={{ cursor: "pointer" }}
+            />
+            {dotPosition && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: dotPosition.y,
+                  left: dotPosition.x,
+                  width: "10px",
+                  height: "10px",
+                  backgroundColor: "red",
+                  borderRadius: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+              ></div>
+            )}
+          </div>
         </section>
         <div>
           <h2 className="text-2xl font-bold mb-4">
