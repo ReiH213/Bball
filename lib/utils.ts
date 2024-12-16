@@ -18,3 +18,6 @@ export function getTeamByName(name: string): team {
   const foundTeam = nbaTeams.filter((team) => team.name === name);
   return foundTeam[0];
 }
+
+export const generateKey = () =>
+  `${Date.now()}-${Math.random().toString(16).slice(2)}`;

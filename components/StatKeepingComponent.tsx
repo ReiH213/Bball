@@ -1,89 +1,137 @@
 "use client";
 import { assists, blocks, fieldGoals, rebounds, steals } from "@/constants";
 import { getTeamByName } from "@/lib/utils";
+import { writeClient } from "@/sanity/lib/write-client";
+import { Match, Player } from "@/sanity/types";
 import Image from "next/image";
-import React, { useLayoutEffect, useState } from "react";
+import React, { useState } from "react";
 
 const StatKeepingComponent = ({
   firstTeam,
   secondTeam,
+  firstTeamStats: initialFirstTeamStats,
+  secondTeamStats: initialSecondTeamStats,
+  match,
 }: {
   firstTeam: string;
   secondTeam: string;
+  firstTeamStats: Player[];
+  secondTeamStats: Player[];
+  match: Match;
 }) => {
-  const [firstTeamStats, setFirstTeamStats] = useState<PlayerDuringGame[]>([]);
-  const [secondTeamStats, setSecondTeamStats] = useState<PlayerDuringGame[]>(
-    []
+  const [firstTeamStats, setFirstTeamStats] = useState<Player[]>(
+    initialFirstTeamStats
   );
-
-  const [selected, setSelected] = useState("");
-  const [selectedAction, setSelectedAction] = useState("");
-  const [dot, setDot] = useState<Dot>({ x: 0, y: 0, made: false });
+  const [secondTeamStats, setSecondTeamStats] = useState<Player[]>(
+    initialSecondTeamStats
+  );
+  const [selectedPlayerName, setSelectedPlayerName] = useState<string | null>(
+    null
+  );
+  const [selectedAction, setSelectedAction] = useState<string>("");
+  const [dot, setDot] = useState<{ x: number; y: number; made: boolean }>({
+    x: 0,
+    y: 0,
+    made: false,
+  });
   const [firstTeamScore, setFirstTeamScore] = useState(0);
   const [secondTeamScore, setSecondTeamScore] = useState(0);
-  const handleImageClick = (event: any) => {
+
+  const handleSubmitGame = async () => {
+    try {
+      const response = await fetch("/api/submit-game", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstTeamStats,
+          secondTeamStats,
+          firstTeamScore,
+          secondTeamScore,
+          match, // Replace with the actual match ID
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        alert(result.message);
+      } else {
+        console.error(result.message);
+        alert("Failed to submit the game. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error submitting the game:", error);
+      alert("Failed to submit the game. Please try again.");
+    }
+  };
+
+  const handleImageClick = (event: React.MouseEvent) => {
     const { offsetX, offsetY } = event.nativeEvent;
-    const imageWidth = 820; // Assuming you know the image width
-    const imageHeight = 380; // Assuming you know the image height
-
-    // Calculate actual click position after rotation (consider image dimensions)
-    const actualX = imageHeight - offsetY + imageWidth + 474;
-    const actualY = offsetX + 4;
-
+    const actualX = offsetX;
+    const actualY = offsetY + 256; // Adjust based on image dimensions
     setDot({ y: actualY, x: actualX, made: false });
   };
 
   const handleFieldGoal = (made?: boolean) => {
-    if (!selected) return;
+    if (!selectedPlayerName) return;
 
-    // Points to add based on field goal type
     const pointsToAdd =
       selectedAction === "3-Points" ? 3 : selectedAction === "2-Points" ? 2 : 1;
 
-    // Determine the correct team
-    const team = firstTeamStats.some((p) => p.name === selected)
-      ? "first"
-      : "second";
+    const teamStats =
+      firstTeamStats.find((p) => p.name === selectedPlayerName) !== undefined
+        ? "first"
+        : "second";
 
     if (made) {
-      // Update the team's score
-      if (team === "first") {
-        setFirstTeamScore((prevScore) => prevScore + pointsToAdd);
+      if (teamStats === "first") {
+        setFirstTeamScore((prev) => prev + pointsToAdd);
       } else {
-        setSecondTeamScore((prevScore) => prevScore + pointsToAdd);
+        setSecondTeamScore((prev) => prev + pointsToAdd);
       }
 
-      // Update player's field goal stats
-      const fieldGoalKey: keyof PlayerDuringGame["fieldGoals"] =
+      const fieldGoalKey =
         pointsToAdd === 3
           ? "points_3"
           : pointsToAdd === 2
             ? "points_2"
             : "points_1";
 
-      updatePlayerStats(team, selected, fieldGoalKey, {
-        value: pointsToAdd,
-        dot: { ...dot, made: true },
-      });
+      updatePlayerStats(
+        teamStats,
+        selectedPlayerName,
+        "fieldGoals",
+        {
+          value: pointsToAdd,
+          dot: { ...dot, made: true },
+          _key: generateKey(),
+        },
+        fieldGoalKey as keyof NonNullable<Player["matchDays"]>[0]["fieldGoals"]
+      );
     } else {
-      // Track missed shot
-      updatePlayerStats(team, selected, "missedShots", { value: 1, dot });
+      updatePlayerStats(teamStats, selectedPlayerName, "missedShots", {
+        value: 1,
+        dot,
+        _key: generateKey(),
+      });
     }
   };
 
   const handlePlayerAction = (action: string) => {
-    if (!selected) return;
-
-    // Determine the stat key and increment based on action
+    if (!selectedPlayerName) return;
+    console.log(action);
 
     const statMapping: {
-      [key: string]: keyof PlayerDuringGame;
+      [key: string]: keyof NonNullable<NonNullable<Player["matchDays"]>[0]>;
     } = {
       "O-Rebound": "oRebounds",
       "D-Rebound": "dRebounds",
       Steal: "steals",
       Block: "blocks",
       Foul: "fouls",
+      Assist: "assists",
     };
 
     const statKey = statMapping[action];
@@ -91,20 +139,28 @@ const StatKeepingComponent = ({
 
     if (!statKey) return;
 
-    // Determine the team
-    const team = firstTeamStats.some((p) => p.name === selected)
-      ? "first"
-      : "second";
+    const teamStats =
+      firstTeamStats.find((p) => p.name === selectedPlayerName) !== undefined
+        ? "first"
+        : "second";
 
-    // Update stats
-    updatePlayerStats(team, selected, statKey, { value: 1, dot });
+    updatePlayerStats(teamStats, selectedPlayerName, statKey, {
+      value: 1,
+      dot,
+      _key: generateKey(),
+    });
   };
 
   const updatePlayerStats = (
     team: "first" | "second",
     playerName: string,
-    statKey: keyof PlayerDuringGame | keyof PlayerDuringGame["fieldGoals"],
-    data: { value: number; dot: Dot }
+    statKey: keyof NonNullable<NonNullable<Player["matchDays"]>[0]>,
+    data: {
+      value: number;
+      dot: { x: number; y: number; made?: boolean };
+      _key: string;
+    },
+    fieldGoalKey?: keyof NonNullable<Player["matchDays"]>[0]["fieldGoals"]
   ) => {
     const stats = team === "first" ? firstTeamStats : secondTeamStats;
     const setStats = team === "first" ? setFirstTeamStats : setSecondTeamStats;
@@ -112,277 +168,249 @@ const StatKeepingComponent = ({
     const updatedStats = stats.map((player) => {
       if (player.name !== playerName) return player;
 
-      // Handle field goals, fouls, rebounds, steals, blocks
-      if (statKey === "fouls") {
-        return {
-          ...player,
-          fouls: [...player.fouls, { foul: data.value, dot: data.dot }],
-        };
-      } else if (statKey === "oRebounds" || statKey === "dRebounds") {
-        return {
-          ...player,
-          [statKey]: [
-            ...player[statKey],
-            { rebound: data.value, dot: data.dot },
+      const matchDay = player.matchDays?.[0];
+
+      if (!matchDay) return player;
+      if (statKey === "fieldGoals" && fieldGoalKey) {
+        const updatedFieldGoals = {
+          ...matchDay.fieldGoals,
+          [fieldGoalKey]: [
+            ...(matchDay.fieldGoals?.[fieldGoalKey] || []),
+            data,
           ],
         };
-      } else if (statKey === "steals") {
+
         return {
           ...player,
-          steals: [...player.steals, { steal: data.value, dot: data.dot }],
+          matchDays: [
+            {
+              ...matchDay,
+              fieldGoals: updatedFieldGoals,
+            },
+          ],
         };
-      } else if (statKey === "blocks") {
+      } else if (Array.isArray(matchDay[statKey])) {
+        const updatedStatArray = [
+          ...(matchDay[statKey] as Array<any>), // Confirm it's an array
+          data,
+        ];
+
         return {
           ...player,
-          blocks: [...player.blocks, { block: data.value, dot: data.dot }],
-        };
-      } else if (
-        statKey === "points_2" ||
-        statKey === "points_3" ||
-        statKey === "points_1"
-      ) {
-        return {
-          ...player,
-          fieldGoals: {
-            ...player.fieldGoals,
-            [statKey]: [
-              ...player.fieldGoals[
-                statKey as keyof PlayerDuringGame["fieldGoals"]
-              ],
-              { point: data.value, dot: data.dot },
-            ],
-          },
-        };
-      } else if (statKey === "missedShots") {
-        return {
-          ...player,
-          missedShots: [
-            ...player.missedShots,
-            { missed: data.value, dot: data.dot },
+          matchDays: [
+            {
+              ...matchDay,
+              [statKey]: updatedStatArray,
+            },
           ],
         };
       }
-
       return player;
     });
 
-    setStats(updatedStats);
+    setStats(updatedStats as Player[]);
     setSelectedAction("");
-    setSelected("");
+    setSelectedPlayerName(null);
     setDot({ x: 0, y: 0, made: false });
   };
 
-  const hanldeClick = () => {
-    console.log(firstTeamStats);
-    console.log(secondTeamStats);
-  };
-  useLayoutEffect(() => {
-    const initializeTeamStats = (teamName: string) => {
-      const team = getTeamByName(teamName);
-      return team.startingFive.map((player) => ({
-        name: player,
-        fieldGoals: {
-          points_2: [],
-          points_3: [],
-          points_1: [],
-        },
-        fouls: [],
-        oRebounds: [],
-        dRebounds: [],
-        steals: [],
-        blocks: [],
-        missedShots: [],
-      }));
-    };
-    setFirstTeamStats(initializeTeamStats(firstTeam));
-    setSecondTeamStats(initializeTeamStats(secondTeam));
-  }, [firstTeam, secondTeam]);
+  const generateKey = () =>
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
   return (
-    <div className="flex mt-5 flex-col justify-center">
+    <div className="flex items-center w-full mt-5 flex-col justify-center text-white">
       <h1 className="flex flex-row gap-x-40 font-bold ml-16 text-3xl">
         {firstTeamScore} <span className="font-extrabold">-</span>{" "}
         {secondTeamScore}
       </h1>
-      <section className="flex flex-row">
-        <div className="flex flex-col gap-y-12 mt-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-2">{firstTeam}</h2>
-            <ul className="flex flex-col gap-y-2">
-              {getTeamByName(firstTeam).startingFive.map((player) => (
+
+      <section className="flex flex-wrap mt-10 gap-x-4 max-h-7">
+        <div className="flex flex-row gap-4">
+          {fieldGoals.map((fieldGoal) => (
+            <span
+              key={fieldGoal}
+              onClick={() => setSelectedAction(fieldGoal)}
+              className={
+                selectedAction !== fieldGoal
+                  ? "bg-[#492e21] rounded-lg p-2 font-semibold text-white hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                  : "cursor-default bg-white text-[#694d3f] font-semibold rounded-lg p-2 shadow-md shadow-black-0"
+              }
+            >
+              {fieldGoal}
+            </span>
+          ))}
+          <span
+            onClick={() => handleFieldGoal(true)}
+            className="rounded-lg p-2 font-semibold bg-green-700 text-green-400 hover:bg-green-600 hover:text-white active:text-green-500 active:bg-white ease-in-out transition-all delay-150 hover:cursor-pointer"
+          >
+            Made
+          </span>
+          <span
+            onClick={() => handleFieldGoal(false)}
+            className="rounded-lg p-2 font-semibold bg-red-700 text-red-300 hover:bg-red-600 hover:text-white active:text-red-500 active:bg-white ease-in-out transition-all delay-150 hover:cursor-pointer"
+          >
+            Missed
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-4">
+          {rebounds.map((rebound) => (
+            <span
+              key={rebound}
+              onClick={() => handlePlayerAction(rebound)}
+              className={
+                selectedAction !== rebound
+                  ? "bg-[#492e21] rounded-lg p-2 font-semibold text-white active:bg-white active:text-[#694d3f] hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                  : "cursor-default  text-[#694d3f] font-semibold rounded-lg p-2 shadow-md shadow-black-0"
+              }
+            >
+              {rebound}
+            </span>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-6">
+          {assists.map((assist) => (
+            <span
+              key={assist}
+              onClick={() => handlePlayerAction(assist)}
+              className={
+                selectedAction !== assist
+                  ? "bg-[#492e21] rounded-lg p-2 font-semibold active:bg-white active:text-[#694d3f] text-white hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                  : "cursor-default bg-white text-[#694d3f] font-semibold rounded-lg p-2 shadow-md shadow-black-0"
+              }
+            >
+              {assist}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-6">
+          {steals.map((steal) => (
+            <span
+              key={steal}
+              onClick={() => handlePlayerAction(steal)}
+              className={
+                selectedAction !== steal
+                  ? "bg-[#492e21] rounded-lg p-2 font-semibold active:bg-white active:text-[#694d3f] text-white hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                  : "cursor-default bg-white text-[#694d3f] font-semibold rounded-lg p-2 shadow-md shadow-black-0"
+              }
+            >
+              {steal}
+            </span>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-6">
+          {blocks.map((block) => (
+            <span
+              key={block}
+              onClick={() => handlePlayerAction(block)}
+              className={
+                selectedAction !== block
+                  ? "bg-[#492e21] rounded-lg p-2 font-semibold active:bg-white active:text-[#694d3f] text-white hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                  : "cursor-default bg-white text-[#694d3f] font-semibold rounded-lg p-2 shadow-md shadow-black-0"
+              }
+            >
+              {block}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-6">
+          <span
+            onClick={() => handlePlayerAction("Foul")}
+            className={
+              selectedAction !== "block"
+                ? "bg-[#492e21] rounded-lg p-2 font-semibold active:bg-white active:text-[#694d3f] text-white hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                : "cursor-default bg-white text-[#694d3f] font-semibold rounded-lg p-2 shadow-md shadow-black-0"
+            }
+          >
+            Foul
+          </span>
+        </div>
+      </section>
+      <section className=" flex flex-row w-full justify-between mt-10 px-5">
+        <div>
+          <h2 className="text-2xl font-bold mb-4">{firstTeam}</h2>
+          <ul className="flex flex-col gap-y-6">
+            {getTeamByName(firstTeam).startingFive.map((player) => (
+              <li
+                onClick={() => setSelectedPlayerName(player)}
+                style={{
+                  height: 50,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  fontWeight: 600,
+                }}
+                className={
+                  selectedPlayerName !== player
+                    ? "bg-[#492e21] rounded-lg p-2 font-semibold active:bg-white active:text-[#694d3f] text-white hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                    : "cursor-default bg-white text-[#694d3f] font-semibold rounded-lg p-2 shadow-md shadow-black-0"
+                }
+                key={player}
+              >
+                {player}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <section>
+          <Image
+            src={"/court.jpg"}
+            alt="court"
+            width={920}
+            height={380}
+            className=""
+            onClick={handleImageClick}
+          />
+          {dot && (
+            <div
+              style={{
+                position: "absolute",
+                right: dot.x,
+                top: dot.y,
+                width: "12px",
+                height: "12px",
+                // backgroundColor: "transparent",
+                borderRadius: "50%",
+              }}
+              className="scale-up-center bg-red-600"
+            ></div>
+          )}
+        </section>
+        <div>
+          <h2 className="text-2xl font-bold mb-4">
+            {secondTeam && secondTeam}
+          </h2>
+          <ul className="flex flex-col gap-y-6">
+            {secondTeam &&
+              getTeamByName(secondTeam).startingFive.map((player) => (
                 <li
-                  onClick={() => setSelected(player)}
+                  style={{
+                    height: 50,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontWeight: 600,
+                  }}
+                  onClick={() => setSelectedPlayerName(player)}
                   className={
-                    selected !== player
-                      ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                      : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
+                    selectedPlayerName !== player
+                      ? "bg-[#492e21] rounded-lg p-2 font-semibold text-white hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+                      : "cursor-default bg-white text-[#694d3f] font-semibold rounded-lg p-2 shadow-md shadow-black-0"
                   }
                   key={player}
                 >
                   {player}
                 </li>
               ))}
-            </ul>
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold mb-2">
-              {secondTeam && secondTeam}
-            </h2>
-            <ul className="flex flex-col gap-y-2">
-              {secondTeam &&
-                getTeamByName(secondTeam).startingFive.map((player) => (
-                  <li
-                    onClick={() => setSelected(player)}
-                    className={
-                      selected !== player
-                        ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                        : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                    }
-                    key={player}
-                  >
-                    {player}
-                  </li>
-                ))}
-            </ul>
-          </div>
-        </div>
-        <div className="flex flex-col gap-y-4 mt-6 ml-10 ">
-          <h2 className="mb-2 text-xl font-semibold">Field Goals</h2>
-          <div className="flex flex-wrap gap-6">
-            {fieldGoals.map((fieldGoal) => (
-              <span
-                key={fieldGoal}
-                onClick={() => setSelectedAction(fieldGoal)}
-                className={
-                  selectedAction !== fieldGoal
-                    ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                    : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                }
-              >
-                {fieldGoal}
-              </span>
-            ))}
-            <span
-              onClick={() => handleFieldGoal(true)}
-              className="rounded-lg p-2 font-semibold bg-green-700 text-green-400 hover:bg-transparent hover:text-green-600 ease-in-out transition-all delay-150 hover:cursor-pointer"
-            >
-              Made
-            </span>
-            <span
-              onClick={() => handleFieldGoal(false)}
-              className="rounded-lg p-2 font-semibold bg-red-700 text-red-300 hover:bg-transparent hover:text-red-600 ease-in-out transition-all delay-150 hover:cursor-pointer"
-            >
-              Missed
-            </span>
-          </div>
-          <h2 className="mb-2 text-xl font-semibold">Rebounds</h2>
-          <div className="flex flex-wrap gap-6">
-            {rebounds.map((rebound) => (
-              <span
-                key={rebound}
-                onClick={() => handlePlayerAction(rebound)}
-                className={
-                  selectedAction !== rebound
-                    ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                    : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                }
-              >
-                {rebound}
-              </span>
-            ))}
-          </div>
-          <div className="flex mt-4 flex-wrap gap-x-5">
-            <div className="flex flex-wrap gap-6">
-              {assists.map((assist) => (
-                <span
-                  key={assist}
-                  onClick={() => handlePlayerAction(assist)}
-                  className={
-                    selectedAction !== assist
-                      ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                      : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                  }
-                >
-                  {assist}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-6">
-              {steals.map((steal) => (
-                <span
-                  key={steal}
-                  onClick={() => handlePlayerAction(steal)}
-                  className={
-                    selectedAction !== steal
-                      ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                      : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                  }
-                >
-                  {steal}
-                </span>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-6">
-              {blocks.map((block) => (
-                <span
-                  key={block}
-                  onClick={() => handlePlayerAction(block)}
-                  className={
-                    selectedAction !== block
-                      ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                      : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                  }
-                >
-                  {block}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-6">
-              <span
-                onClick={() => handlePlayerAction("foul")}
-                className={
-                  selectedAction !== "block"
-                    ? "bg-black-0 rounded-lg p-2 text-white hover:bg-transparent hover:text-black-0 hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-                    : "cursor-default bg-transparent text-black-0 rounded-lg p-2 shadow-md shadow-black-0"
-                }
-              >
-                Foul
-              </span>
-            </div>
-          </div>
-          <button onClick={hanldeClick} className="text-xl">
-            Click
-          </button>
+          </ul>
         </div>
       </section>
-      <section className="mt-64">
-        <Image
-          src={"/court.jpg"}
-          alt="court"
-          width={820}
-          height={380}
-          style={{ transform: "rotate(90deg)" }}
-          className="absolute right-0 top-[180px]"
-          onClick={handleImageClick}
-        />
-        {dot && (
-          <>
-            <div
-              style={{
-                position: "absolute",
-                left: dot.x,
-                top: dot.y,
-                width: "8px",
-                height: "8px",
-                backgroundColor: "transparent",
-                borderRadius: "50%",
-              }}
-              className="scale-up-center border-2 border-white"
-            ></div>
-          </>
-        )}
-      </section>
+      <button
+        className="mt-24 w-96 rounded-lg font-bold text-3xl p-4 bg-[#492e21] text-white  hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+        onClick={handleSubmitGame}
+      >
+        Submit Game
+      </button>
     </div>
   );
 };
