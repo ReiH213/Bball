@@ -9,6 +9,7 @@ import {
 } from "@/sanity/lib/queries";
 import { writeClient } from "@/sanity/lib/write-client";
 import { Match, Player } from "@/sanity/types";
+import Timer from "@/components/Timer";
 
 export default async function Page({
   params,
@@ -97,6 +98,7 @@ export default async function Page({
       <h1 className="flex items-center gap-8 ml-2 text-4xl font-extrabold text-white">
         {firstTeam} <span className="text-4xl font-bold">VS</span> {secondTeam}
       </h1>
+      <Timer />
       <StatKeepingComponent
         firstTeam={firstTeam}
         secondTeam={secondTeam as string}

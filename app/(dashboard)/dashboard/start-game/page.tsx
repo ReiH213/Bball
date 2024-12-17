@@ -1,6 +1,7 @@
 import SelectTeam from "@/components/SelectTeam";
 import { deleteAllPlayers } from "@/sanity/lib/queries";
 import React from "react";
+import Timer from "@/components/Timer";
 
 const page = () => {
   return (
@@ -27,6 +28,7 @@ const page = () => {
         </h1>
         <SelectTeam />
       </div>
+      <Timer />
     </section>
   );
 };
