@@ -17,6 +17,37 @@ export const fetchPlayersFromSanity = async (playerNames: string[]) => {
   return await client.fetch(query, params);
 };
 
+export const fetchPlayerFromSanity = async (playerName: string) => {
+  const query = `*[_type == "player" && name == $names] {
+      _id,
+      _type,
+      _createdAt,
+      _updatedAt,
+      _rev,
+      name,
+      matchDays
+    }`;
+
+  const params = { names: playerName };
+  return await client.fetch(query, params);
+};
+
+export const fetchMatchFromSanity = async (matchId: string) => {
+  const query = `*[_type == "match" && _id==$matchId]{
+  _id,date,firstTeam,secondTeam,score,winner
+}`;
+
+  return await client.fetch(query, { matchId });
+};
+
+export const fetchMatchesFromSanity = async () => {
+  const query = `*[_type == "match"]{
+  _id,date,firstTeam,secondTeam,score,winner
+}`;
+
+  return await client.fetch(query);
+};
+
 export const createMissingPlayers = async (playerNames: string[]) => {
   console.log("These are the player names", playerNames);
 
@@ -59,15 +90,18 @@ export const createMatchIfNotExists = async (
   matchDate: string
 ) => {
   // Query to check if the match already exists
-  const query = `*[_type == "match" && firstTeam == $firstTeam && secondTeam == $secondTeam && date == $matchDate] {
-      _id
-    }`;
+  const matchDateOnly = matchDate.split("T")[0];
+  console.log(matchDateOnly);
 
+  const query = `*[_type == "match" && firstTeam == $firstTeam && secondTeam == $secondTeam ] {
+  _id,date
+    }`;
   const existingMatch = await client.fetch(query, {
     firstTeam,
     secondTeam,
-    matchDate,
+    matchDateOnly,
   });
+  console.log(existingMatch);
 
   if (existingMatch.length > 0) {
     console.log("Match already exists:", existingMatch[0]._id);
@@ -110,4 +144,18 @@ export const deleteAllPlayers = async () => {
   } catch (error) {
     console.error("Error deleting player documents:", error);
   }
+};
+
+export const fetchPlayersMatchDay = async (
+  playerNames: string[],
+  matchId: string
+) => {
+  const query = `*[_type == "player" && name in $playerNames] {
+    _id,
+    name,
+    "matchDays": matchDays[match._ref == $matchId][0]
+  }`;
+
+  const result = await client.fetch(query, { playerNames, matchId });
+  return result;
 };

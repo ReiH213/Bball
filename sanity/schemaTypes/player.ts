@@ -23,6 +23,14 @@ export const player = defineType({
           validation: (Rule) => Rule.required(),
           fields: [
             {
+              name: "match",
+              title: "Match Reference",
+              type: "reference",
+              to: [{ type: "match" }],
+              validation: (Rule) =>
+                Rule.required().error("Match reference is required."),
+            },
+            {
               name: "date",
               title: "Date",
               type: "string",

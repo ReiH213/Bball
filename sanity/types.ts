@@ -131,36 +131,6 @@ export type SanityAssetSourceData = {
   url?: string;
 };
 
-export type Match = {
-  _id: string;
-  _type: "match";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  date?: string;
-  firstTeam?: string;
-  secondTeam?: string;
-  firstTeamPlayers?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "player";
-  }>;
-  secondTeamPlayers?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "player";
-  }>;
-  score?: {
-    firstTeamScore?: number;
-    secondTeamScore?: number;
-  };
-  winner?: string;
-};
-
 export type Player = {
   _id: string;
   _type: "player";
@@ -169,6 +139,12 @@ export type Player = {
   _rev: string;
   name?: string;
   matchDays?: Array<{
+    match?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "match";
+    };
     date?: string;
     fieldGoals?: {
       points_2?: Array<{
@@ -262,5 +238,35 @@ export type Player = {
   }>;
 };
 
-export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData | Match | Player;
+export type Match = {
+  _id: string;
+  _type: "match";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  date?: string;
+  firstTeam?: string;
+  secondTeam?: string;
+  firstTeamPlayers?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "player";
+  }>;
+  secondTeamPlayers?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "player";
+  }>;
+  score?: {
+    firstTeamScore?: number;
+    secondTeamScore?: number;
+  };
+  winner?: string;
+};
+
+export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData | Player | Match;
 export declare const internalGroqTypeReferenceTo: unique symbol;

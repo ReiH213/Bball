@@ -24,7 +24,8 @@ export default async function Page({
 
   const initializeTeamStats = async (
     teamName: string,
-    matchDate: string
+    matchDate: string,
+    matchId: string
   ): Promise<Player[]> => {
     const team = getTeamByName(teamName); // Local function to get the team by name
     const playerNames = team.startingFive;
@@ -48,6 +49,7 @@ export default async function Page({
               {
                 _key: generateKey(),
                 date: matchDate,
+                match: { _type: "reference", _ref: matchId },
                 fieldGoals: {
                   points_2: [],
                   points_3: [],
@@ -74,12 +76,20 @@ export default async function Page({
     return updatedPlayers; // Return the updated players
   };
 
-  const firstTeamStats = await initializeTeamStats(firstTeam, matchDate);
-  const secondTeamStats = await initializeTeamStats(secondTeam, matchDate);
   const match: Match = await createMatchIfNotExists(
     firstTeam,
     secondTeam,
     matchDate
+  );
+  const firstTeamStats = await initializeTeamStats(
+    firstTeam,
+    matchDate,
+    match._id
+  );
+  const secondTeamStats = await initializeTeamStats(
+    secondTeam,
+    matchDate,
+    match._id
   );
 
   return (

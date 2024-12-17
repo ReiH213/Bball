@@ -4,8 +4,8 @@ import React from "react";
 
 const page = () => {
   return (
-    <section className="m-2 flex flex-col w-full h-full">
-      <h1 className="text-4xl text-black-1 font-ibm-plex-serif">
+    <section className="flex overflow-hidden flex-col w-full h-full justify-start items-center ">
+      <h1 className="text-4xl mt-4 text-white font-extrabold p-4 border-2 rounded-lg">
         New Match Registration
       </h1>
       <form
@@ -21,8 +21,8 @@ const page = () => {
           Delete
         </button>
       </form>
-      <div className="flex flex-col ml-10 mt-10 gap-32  items-start justify-center">
-        <h1 className="text-xl bg-black-0 text-white rounded-md p-2">
+      <div className="flex flex-col mt-10 gap-32  items-center justify-center">
+        <h1 className="text-xl bg-[#492e21] text-white rounded-md p-2">
           Select teams
         </h1>
         <SelectTeam />
