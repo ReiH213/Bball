@@ -128,17 +128,16 @@ export const deleteAllPlayers = async () => {
     // Fetch all player document IDs
     const playerDocs = await client.fetch(`*[_type == "player"]{_id}`);
     const matchDocs = await client.fetch(`*[_type == "match"]{_id}`);
-
-    const matchPromises = matchDocs.map((doc: any) => {
-      writeClient.delete(doc._id);
-    });
-    // Delete each player document
     const deletePromises = playerDocs.map((doc: any) => {
       console.log(doc);
 
       writeClient.delete(doc._id);
     });
     await Promise.all(deletePromises);
+    const matchPromises = matchDocs.map((doc: any) => {
+      writeClient.delete(doc._id);
+    });
+    // Delete each player document
 
     console.log("All player documents have been deleted.");
   } catch (error) {
@@ -157,5 +156,6 @@ export const fetchPlayersMatchDay = async (
   }`;
 
   const result = await client.fetch(query, { playerNames, matchId });
+
   return result;
 };

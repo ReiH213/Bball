@@ -3,6 +3,7 @@ import { assists, blocks, fieldGoals, rebounds, steals } from "@/constants";
 import { getTeamByName } from "@/lib/utils";
 import { Match, Player } from "@/sanity/types";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 const StatKeepingComponent = ({
@@ -35,7 +36,7 @@ const StatKeepingComponent = ({
   });
   const [firstTeamScore, setFirstTeamScore] = useState(0);
   const [secondTeamScore, setSecondTeamScore] = useState(0);
-
+  const router = useRouter();
   const handleSubmitGame = async () => {
     try {
       const response = await fetch("/api/submit-game", {
@@ -56,6 +57,7 @@ const StatKeepingComponent = ({
 
       if (response.ok && result.success) {
         alert(result.message);
+        router.push("/dashboard/recorded-games");
       } else {
         console.error(result.message);
         alert("Failed to submit the game. Please try again.");

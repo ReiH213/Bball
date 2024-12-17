@@ -5,7 +5,6 @@ import {
   fetchPlayersMatchDay,
 } from "@/sanity/lib/queries";
 import React from "react";
-
 const Page = async ({ params }: { params: Promise<{ matchId?: string }> }) => {
   const matchId = (await params).matchId as string;
   const match = await fetchMatchFromSanity(matchId);
@@ -72,6 +71,41 @@ const Page = async ({ params }: { params: Promise<{ matchId?: string }> }) => {
           Winner: {match[0].winner}
         </h3>
       </div>
+      <div className="flex flex-wrap w-full items-center justify-center gap-x-6 mt-5">
+        <div className="flex flex-row gap-x-3">
+          <div className="rounded-full p-2 h-4 w-4 bg-green-500" />
+          <h1>Field Goals</h1>
+        </div>
+        <div className="flex flex-row gap-x-3">
+          <div className="rounded-full p-2 h-4 w-4 bg-red-500" />
+          <h1>Missed Shot</h1>
+        </div>
+        <div className="flex flex-row gap-x-3">
+          <div className="rounded-full p-2 h-4 w-4 bg-[#7e27cf]" />
+          <h1>Offensive Rebound</h1>
+        </div>
+        <div className="flex flex-row gap-x-3">
+          <div className="rounded-full p-2 h-4 w-4 bg-blue-500" />
+          <h1>Deffensive Rebound</h1>
+        </div>
+        <div className="flex flex-row gap-x-3">
+          <div className="rounded-full p-2 h-4 w-4 bg-pink-500" />
+          <h1>Assist</h1>
+        </div>
+        <div className="flex flex-row gap-x-3">
+          <div className="rounded-full p-2 h-4 w-4 bg-orange-500" />
+          <h1>Steal</h1>
+        </div>
+        <div className="flex flex-row gap-x-3">
+          <div className="rounded-full p-2 h-4 w-4 bg-black-0" />
+          <h1>Block</h1>
+        </div>
+        <div className="flex flex-row gap-x-3">
+          <div className="rounded-full p-2 h-4 w-4 bg-yellow-500" />
+          <h1>Foul</h1>
+        </div>
+      </div>
+
       <AfterGameDetails
         firstTeam={match[0].firstTeam}
         secondTeam={match[0].secondTeam}
