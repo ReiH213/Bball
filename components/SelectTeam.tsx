@@ -11,10 +11,12 @@ import { nbaTeams } from "@/constants";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
+import LoadSpinner from "./LoadSpinner";
 const SelectTeam = () => {
   const [firstTeam, setFirstTeam] = useState<team | null>(null);
   const [secondTeam, setSecondTeam] = useState<team | null>(null);
   const [selectTeamError, setSelectTeamError] = useState(false);
+  const [isLoading, setisLoading] = useState(false);
   const handleSelectTeam = (team: team, teamSelect: number) => {
     if (teamSelect === 1) {
       if (team === secondTeam) {
@@ -136,13 +138,18 @@ const SelectTeam = () => {
           </div>
         )}
       </div>
-      <div className="flex flex-col mt-72 w-full max-w-md  text-center gap-y-4">
-        <Link
-          href={`/dashboard/start-game/${firstTeam?.name}?secondTeam=${secondTeam?.name}`}
-          className="rounded-md p-2 bottom-0 bg-[#492e21] text-white hover:bg-[#9b6347] hover:text-white hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 font-semibold"
-        >
-          Start Game
-        </Link>
+      <div className="flex flex-col mt-72 w-full max-w-md  text-center gap-y-4 items-center justify-center text-white">
+        {isLoading ? (
+          <LoadSpinner />
+        ) : (
+          <Link
+            href={`/dashboard/start-game/${firstTeam?.name}?secondTeam=${secondTeam?.name}`}
+            className="rounded-md p-2 bottom-0 bg-[#492e21] text-white hover:bg-[#9b6347] hover:text-white hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 font-semibold"
+            onClick={() => setisLoading(true)}
+          >
+            Start Game
+          </Link>
+        )}
       </div>
     </div>
   );

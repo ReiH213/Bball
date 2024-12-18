@@ -20,12 +20,56 @@ export async function POST(request: Request) {
     } = body;
 
     await Promise.all(
-      [...firstTeamStats, ...secondTeamStats].map((player: any) =>
-        writeClient
+      [...firstTeamStats, ...secondTeamStats].map(async (player: any) => {
+        const existingPlayer = await writeClient.fetch(
+          `*[_type == "player" && _id == $id][0]`,
+          { id: player._id }
+        );
+        const existingMatchDays = existingPlayer?.matchDays || [];
+
+        const currentMatchDay = player.matchDays[0];
+        if (player.name === "Trae Young") {
+          console.log(currentMatchDay);
+        }
+
+        const updatedMatchDays = existingMatchDays.map((day: any) => {
+          if (day.match?._ref === match._id) {
+            // Update only the current matchDay stats by merging them
+
+            return {
+              ...day,
+              fieldGoals: {
+                points_1: [...(currentMatchDay.fieldGoals?.points_1 || [])],
+                points_2: [...(currentMatchDay.fieldGoals?.points_2 || [])],
+                points_3: [...(currentMatchDay.fieldGoals?.points_3 || [])],
+              },
+              oRebounds: [...(currentMatchDay.oRebounds || [])],
+              dRebounds: [...(currentMatchDay.dRebounds || [])],
+              steals: [...(currentMatchDay.steals || [])],
+              blocks: [...(currentMatchDay.blocks || [])],
+              fouls: [...(currentMatchDay.fouls || [])],
+              missedShots: [...(currentMatchDay.missedShots || [])],
+              assists: [...(currentMatchDay.assists || [])],
+            };
+          }
+          return day; // Keep other matchDays unchanged
+        });
+        if (player.name === "Trae Young") {
+          console.log(updatedMatchDays);
+        }
+
+        const isMatchDayExists = existingMatchDays.some(
+          (day: any) => day.match?._ref === player.matchDays[0].match?._ref
+        );
+        if (!isMatchDayExists) {
+          updatedMatchDays.push(currentMatchDay);
+        }
+
+        await writeClient
           .patch(player._id)
-          .set({ matchDays: player.matchDays }) // Update the entire matchDays array
-          .commit()
-      )
+          .set({ matchDays: updatedMatchDays })
+          .commit();
+      })
     );
 
     // Update the match document

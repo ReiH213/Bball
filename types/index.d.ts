@@ -13,7 +13,6 @@ declare type User = {
 };
 
 declare interface FooterProps {
-  user: User;
   type: "mobile" | "desktop";
 }
 
@@ -21,6 +20,11 @@ declare type team = {
   coachName: string;
   name: string;
   startingFive: string[];
+};
+
+declare type playerImg = {
+  name: string;
+  img: string;
 };
 
 declare type Dot = {

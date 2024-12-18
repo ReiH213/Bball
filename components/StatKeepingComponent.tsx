@@ -4,7 +4,8 @@ import { getTeamByName } from "@/lib/utils";
 import { Match, Player } from "@/sanity/types";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import LoadSpinner from "./LoadSpinner";
 
 const StatKeepingComponent = ({
   firstTeam,
@@ -36,8 +37,12 @@ const StatKeepingComponent = ({
   });
   const [firstTeamScore, setFirstTeamScore] = useState(0);
   const [secondTeamScore, setSecondTeamScore] = useState(0);
+  const [isLoading, setisLoading] = useState(false);
   const router = useRouter();
   const handleSubmitGame = async () => {
+    console.log(firstTeamStats);
+
+    setisLoading(true);
     try {
       const response = await fetch("/api/submit-game", {
         method: "POST",
@@ -49,7 +54,7 @@ const StatKeepingComponent = ({
           secondTeamStats,
           firstTeamScore,
           secondTeamScore,
-          match, // Replace with the actual match ID
+          match,
         }),
       });
 
@@ -57,14 +62,17 @@ const StatKeepingComponent = ({
 
       if (response.ok && result.success) {
         alert(result.message);
+        setisLoading(false);
         router.push("/dashboard/recorded-games");
       } else {
         console.error(result.message);
         alert("Failed to submit the game. Please try again.");
+        setisLoading(false);
       }
     } catch (error) {
       console.error("Error submitting the game:", error);
       alert("Failed to submit the game. Please try again.");
+      setisLoading(false);
     }
   };
 
@@ -170,10 +178,13 @@ const StatKeepingComponent = ({
 
     const updatedStats = stats.map((player) => {
       if (player.name !== playerName) return player;
-
-      const matchDay = player.matchDays?.[0];
+      const matchDayIndex = player.matchDays?.findIndex(
+        (day) => day.match?._ref === match._id
+      );
+      const matchDay = player.matchDays?.[matchDayIndex || 0];
 
       if (!matchDay) return player;
+
       if (statKey === "fieldGoals" && fieldGoalKey) {
         const updatedFieldGoals = {
           ...matchDay.fieldGoals,
@@ -413,12 +424,18 @@ const StatKeepingComponent = ({
           </ul>
         </div>
       </section>
-      <button
-        className="mt-24 w-96 rounded-lg font-bold text-3xl p-4 bg-[#492e21] text-white  hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
-        onClick={handleSubmitGame}
-      >
-        Submit Game
-      </button>
+      {isLoading ? (
+        <div className="mt-20">
+          <LoadSpinner />
+        </div>
+      ) : (
+        <button
+          className="mt-24 w-96 rounded-lg font-bold text-3xl p-4 bg-[#492e21] text-white  hover:bg-[#9b6347]  hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 hover:cursor-pointer"
+          onClick={handleSubmitGame}
+        >
+          Submit Game
+        </button>
+      )}
     </div>
   );
 };

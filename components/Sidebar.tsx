@@ -43,6 +43,8 @@ const Sidebar = () => {
                   fill
                   className={cn("brightness-[6]", {
                     "brightness-[3] invert-0": isActive,
+                    "filter invert-[1] sepia-[1] saturate-[0] hue-rotate-[360deg]":
+                      link.label === "Players Statistics" && !isActive,
                     "brightness-[1]": isActive && link.route === "/dashboard",
                   })}
                 />

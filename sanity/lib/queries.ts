@@ -17,6 +17,20 @@ export const fetchPlayersFromSanity = async (playerNames: string[]) => {
   return await client.fetch(query, params);
 };
 
+export const fetchAllPlayersFromSanity = async () => {
+  const query = `*[_type == "player"] {
+      _id,
+      _type,
+      _createdAt,
+      _updatedAt,
+      _rev,
+      name,
+      matchDays
+    }`;
+
+  return await client.fetch(query);
+};
+
 export const fetchPlayerFromSanity = async (playerName: string) => {
   const query = `*[_type == "player" && name == $names] {
       _id,
@@ -40,6 +54,14 @@ export const fetchMatchFromSanity = async (matchId: string) => {
   return await client.fetch(query, { matchId });
 };
 
+export const fetchMatchFromSanityByRef = async (matchRef: string) => {
+  const query = `*[_type == "match" && _ref==matchRef]{
+  _id,date,firstTeam,secondTeam,score,winner
+}`;
+
+  return await client.fetch(query, { matchRef });
+};
+
 export const fetchMatchesFromSanity = async () => {
   const query = `*[_type == "match"]{
   _id,date,firstTeam,secondTeam,score,winner
@@ -49,30 +71,26 @@ export const fetchMatchesFromSanity = async () => {
 };
 
 export const createMissingPlayers = async (playerNames: string[]) => {
-  console.log("These are the player names", playerNames);
-
   const query = `*[_type == "player" && name in $names] {
-        name,_id
+        name,_id,matchDays
       }`;
   const existingPlayers = await client.fetch(query, { names: playerNames });
-  console.log("These are exisitng players: ", existingPlayers);
+  console.log("existing players: ", existingPlayers);
 
-  // Convert existing player names into a Set for efficient lookup
   const existingPlayerNames = new Set(
     existingPlayers.map((player: Player) => player.name)
   );
   const playersToCreate = playerNames.filter(
     (name) => !existingPlayerNames.has(name)
   );
-  console.log("to be created: ");
-  console.log(playersToCreate);
+  console.log("players to create", playersToCreate);
 
-  if (playersToCreate.length === 0) return existingPlayers; // If all players exist, return early
+  if (playersToCreate.length === 0) return existingPlayers;
 
-  // Create only the missing players
   const newPlayers = playersToCreate.map((name) => ({
     _type: "player",
     name,
+    matchDays: [],
     _createdAt: new Date().toISOString(),
     _updatedAt: new Date().toISOString(),
   }));
