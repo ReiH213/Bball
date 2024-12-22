@@ -2,6 +2,24 @@ import { defineQuery } from "next-sanity";
 import { client } from "./client";
 import { writeClient } from "./write-client";
 import { Player } from "../types";
+export const fetchMatchStatsFromSanity = async (): Promise<any[]> => {
+  // Fetch matches and stats from Sanity
+  const query = `*[_type == "match"] {
+    _id,
+    firstTeam,
+    secondTeam,
+    score,
+    "opponentStats": *[_type == "player" && references(^._id)] {
+      matchDays[match._ref == ^._id] {
+        fieldGoals,
+        oRebounds,
+        turnovers,
+        freeThrows
+      }
+    }
+  }`;
+  return await client.fetch(query);
+};
 export const fetchPlayersFromSanity = async (playerNames: string[]) => {
   const query = `*[_type == "player" && name in $names] {
       _id,
@@ -17,18 +35,38 @@ export const fetchPlayersFromSanity = async (playerNames: string[]) => {
   return await client.fetch(query, params);
 };
 
-export const fetchAllPlayersFromSanity = async () => {
-  const query = `*[_type == "player"] {
-      _id,
-      _type,
-      _createdAt,
-      _updatedAt,
-      _rev,
-      name,
-      matchDays
-    }`;
+// export const fetchPlayersFromQuery = async (
+//   query?: string
+// ): Promise<Player[]> => {
+//   const searchFilter = query ? `&& name match "*${query}*"` : ""; // Add search filter if a query is provided
 
-  return await client.fetch(query);
+//   const players = await client.fetch(`
+//     *[_type == "player" ${searchFilter}] {
+//       _id,
+//       name,
+//       matchDays,
+//       // Include other fields as needed
+//     }
+//   `);
+
+//   return players;
+// };
+
+export const fetchAllPlayersFromSanity = async (
+  query?: string
+): Promise<Player[]> => {
+  const searchFilter = query ? `&& name match "*${query}*"` : ""; // Add search filter if a query is provided
+
+  const players = await client.fetch(`
+      *[_type == "player" ${searchFilter}] {
+        _id,
+        name,
+        matchDays,
+        // Include other fields as needed
+      }
+    `);
+
+  return players;
 };
 
 export const fetchPlayerFromSanity = async (playerName: string) => {
@@ -109,8 +147,6 @@ export const createMatchIfNotExists = async (
 ) => {
   // Query to check if the match already exists
   const matchDateOnly = matchDate.split("T")[0];
-  console.log(matchDateOnly);
-
   const query = `*[_type == "match" && firstTeam == $firstTeam && secondTeam == $secondTeam ] {
   _id,date
     }`;
@@ -119,7 +155,6 @@ export const createMatchIfNotExists = async (
     secondTeam,
     matchDateOnly,
   });
-  console.log(existingMatch);
 
   if (existingMatch.length > 0) {
     console.log("Match already exists:", existingMatch[0]._id);
@@ -137,7 +172,6 @@ export const createMatchIfNotExists = async (
   };
 
   const createdMatch = await writeClient.create(newMatch);
-  console.log("Created new match:", createdMatch);
   return createdMatch;
 };
 
@@ -147,8 +181,6 @@ export const deleteAllPlayers = async () => {
     const playerDocs = await client.fetch(`*[_type == "player"]{_id}`);
     const matchDocs = await client.fetch(`*[_type == "match"]{_id}`);
     const deletePromises = playerDocs.map((doc: any) => {
-      console.log(doc);
-
       writeClient.delete(doc._id);
     });
     await Promise.all(deletePromises);

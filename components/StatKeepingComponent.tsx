@@ -40,8 +40,6 @@ const StatKeepingComponent = ({
   const [isLoading, setisLoading] = useState(false);
   const router = useRouter();
   const handleSubmitGame = async () => {
-    console.log(firstTeamStats);
-
     setisLoading(true);
     try {
       const response = await fetch("/api/submit-game", {
@@ -132,7 +130,6 @@ const StatKeepingComponent = ({
 
   const handlePlayerAction = (action: string) => {
     if (!selectedPlayerName) return;
-    console.log(action);
 
     const statMapping: {
       [key: string]: keyof NonNullable<NonNullable<Player["matchDays"]>[0]>;
@@ -146,8 +143,6 @@ const StatKeepingComponent = ({
     };
 
     const statKey = statMapping[action];
-    console.log(statKey);
-
     if (!statKey) return;
 
     const teamStats =

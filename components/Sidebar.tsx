@@ -9,8 +9,6 @@ import { sidebarLinks } from "@/constants";
 
 const Sidebar = () => {
   const pathname = usePathname();
-  console.log(pathname);
-
   return (
     <section className="sidebar">
       <nav className="flex flex-col gap-4">

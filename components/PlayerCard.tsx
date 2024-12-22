@@ -2,10 +2,7 @@ import { playerIMgs } from "@/constants";
 import Image from "next/image";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -40,8 +37,6 @@ const PlayerCard = ({ name, player }: { name?: string; player: Player }) => {
 
     try {
       const matchName = await fetchMatchFromSanityByRef(matchRef);
-      console.log(matchName[0]);
-
       if (matchName) {
         return (
           <h1 className="flex flex-row min-w-fit items-center gap-x-3">
@@ -210,16 +205,31 @@ const PlayerCard = ({ name, player }: { name?: string; player: Player }) => {
   };
   return (
     <Dialog>
-      <DialogTrigger className="bg-[#633d2b] gap-y-4 flex flex-col text-white p-2 items-start justify-start shadow-lg min-w-44 rounded-lg overflow-hidden transform transition-transform  hover:bg-[#9b6347] hover:scale-105 hover:shadow-2xl max-h-44 hover:cursor-pointer">
+      <DialogTrigger className="bg-[#633d2b] min-w-[240px] gap-y-4 flex flex-col text-white p-2 items-start justify-start shadow-lg   rounded-lg overflow-hidden transform transition-transform  hover:bg-[#9b6347] hover:scale-105 hover:shadow-2xl max-h-44 hover:cursor-pointer">
         <h2 className="text-lg font-semibold">{name}</h2>
-        {playerFromImage?.img && (
-          <Image
-            src={playerFromImage.img}
-            alt="Player Profile"
-            width={100}
-            height={100}
-          />
-        )}
+        <div className="flex flex-row gap-x-2">
+          {playerFromImage?.img && (
+            <Image
+              src={playerFromImage.img}
+              alt="Player Profile"
+              width={100}
+              height={100}
+            />
+          )}
+          <div className="flex flex-col">
+            <h1 className="font-normal flex flex-row gap-x-1">
+              Height{" "}
+              <span className="font-bold">{playerFromImage?.height}</span>
+            </h1>
+            <h1 className="font-normal flex flex-row gap-x-1">
+              Weight{" "}
+              <span className="font-bold">{playerFromImage?.weight}</span>
+            </h1>
+            <h1 className="font-normal flex flex-row gap-x-1">
+              No: <span className="font-bold">{playerFromImage?.jersey}</span>
+            </h1>
+          </div>
+        </div>
       </DialogTrigger>
       <DialogContent
         className="w-full max-w-[1200px]"

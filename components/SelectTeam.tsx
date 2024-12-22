@@ -7,11 +7,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { nbaTeams } from "@/constants";
+import { nbaTeams, teamImgs } from "@/constants";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
 import LoadSpinner from "./LoadSpinner";
+import Image from "next/image";
 const SelectTeam = () => {
   const [firstTeam, setFirstTeam] = useState<team | null>(null);
   const [secondTeam, setSecondTeam] = useState<team | null>(null);
@@ -125,7 +126,7 @@ const SelectTeam = () => {
           </h1>
         )}
         {firstTeam !== null && secondTeam !== null && (
-          <div className="rounded-lg p-3 justify-center flex flex-col items-center bg-[#492e21] text-white hover:bg-[#9b6347] hover:text-white hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 font-semibold hover:cursor-default min-h-[265px]">
+          <div className="rounded-lg p-3 justify-center flex flex-col gap-y-5 items-center bg-[#492e21] text-white hover:bg-[#9b6347] hover:text-white hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 font-semibold hover:cursor-default min-h-[265px]">
             <h1 className="mb-4">Upcoming Match</h1>
             <h1 className="rounded-md p-2 bottom-0 ">
               Match Day : {formatDate(Date())}
@@ -135,6 +136,26 @@ const SelectTeam = () => {
               <span className="text-6xl font-extrabold">VS</span>{" "}
               {secondTeam.name}
             </h1>
+            <div className=" flex flex-row w-full items-center justify-between">
+              <Image
+                alt="teamImg"
+                src={
+                  teamImgs.find((t) => t.name === firstTeam.name)?.img as string
+                }
+                width={150}
+                height={150}
+              />
+
+              <Image
+                alt="teamImg"
+                src={
+                  teamImgs.find((t) => t.name === secondTeam.name)
+                    ?.img as string
+                }
+                width={150}
+                height={150}
+              />
+            </div>
           </div>
         )}
       </div>

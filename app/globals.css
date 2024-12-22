@@ -540,3 +540,75 @@ body {
     transform: rotate(360deg);
   }
 }
+
+.basketball {
+  font-size: 3rem;
+  color: #f28b22;
+  position: relative; /* Start below the viewport */
+  animation: bounce-move 2s ease-in-out forwards;
+}
+@keyframes bounce-move {
+  0% {
+    transform: translateX(100vw) translateY(0); /* Start outside the screen */
+  }
+  5% {
+    transform: translateX(95vw) translateY(-60px); /* Higher bounce */
+  }
+  10% {
+    transform: translateX(90vw) translateY(-100px); /* Peak bounce */
+  }
+  15% {
+    transform: translateX(85vw) translateY(-140px); /* Highest point */
+  }
+  20% {
+    transform: translateX(80vw) translateY(-120px);
+  }
+  25% {
+    transform: translateX(75vw) translateY(-100px);
+  }
+  30% {
+    transform: translateX(70vw) translateY(-80px);
+  }
+  35% {
+    transform: translateX(65vw) translateY(-60px);
+  }
+  40% {
+    transform: translateX(60vw) translateY(0);
+  }
+  45% {
+    transform: translateX(55vw) translateY(-40px);
+  }
+  50% {
+    transform: translateX(50vw) translateY(-80px);
+  }
+  55% {
+    transform: translateX(45vw) translateY(-60px);
+  }
+  60% {
+    transform: translateX(40vw) translateY(0);
+  }
+  65% {
+    transform: translateX(35vw) translateY(-30px);
+  }
+  70% {
+    transform: translateX(30vw) translateY(-60px);
+  }
+  75% {
+    transform: translateX(25vw) translateY(-40px);
+  }
+  80% {
+    transform: translateX(20vw) translateY(0);
+  }
+  85% {
+    transform: translateX(15vw) translateY(-20px);
+  }
+  90% {
+    transform: translateX(10vw) translateY(-40px);
+  }
+  95% {
+    transform: translateX(5vw) translateY(-20px);
+  }
+  100% {
+    transform: translateX(0) translateY(0); /* End next to the text */
+  }
+}

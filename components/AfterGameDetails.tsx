@@ -61,7 +61,6 @@ const AfterGameDetails = ({
     const extractedDots = extractDotsFromPlayerStats(playerMatchDay);
     setDots(extractedDots);
     setselectedPlayerName(player);
-    console.log("Extracted Dots:", extractedDots);
   };
   const extractDotsFromPlayerStats = (matchDays: any): ExtendedDot[] => {
     const dots: ExtendedDot[] = [];
@@ -146,10 +145,6 @@ const AfterGameDetails = ({
       </Table>
     );
   };
-  useEffect(() => {
-    console.log(firstTeamPlayers);
-    console.log(secondTeamPlayers);
-  }, [firstTeam, secondTeam]);
   return (
     <div className="mt-5 flex flex-row justify-between mx-2 w-full">
       <div className="flex flex-col gap-y-4 text-white">
@@ -235,9 +230,26 @@ const AfterGameDetails = ({
             >
               {player.name}
             </h1>
-            <button className="rounded-lg flex justify-end p-2 bg-[#8b5039] hover:bg-[#dd815c] ease-in-out transition-all delay-100">
-              Show Details
-            </button>
+            <Dialog>
+              <DialogTrigger
+                className="rounded-lg flex justify-end p-2 bg-[#8b5039] hover:bg-[#dd815c] ease-in-out transition-all delay-100"
+                onClick={() => handlePlayerDetails(player)}
+              >
+                Show Details
+              </DialogTrigger>
+              <DialogContent
+                className="w-full max-w-[1200px]"
+                style={{
+                  width: "90vw", // Ensures the dialog uses 90% of the viewport width
+                  maxWidth: "1200px", // Prevents it from becoming too large
+                }}
+              >
+                <DialogHeader>
+                  <DialogTitle>{playerDetails?.name}'s Stats</DialogTitle>
+                </DialogHeader>
+                {renderPlayerStats(playerDetails!)}
+              </DialogContent>
+            </Dialog>
           </div>
         ))}
       </div>

@@ -74,3 +74,34 @@ declare type PlayerDuringGame = {
     dot: Dot;
   }>;
 };
+
+declare type playerPerGame = {
+  name: string;
+  pointsPerGame: number;
+  assistsPerGame: number;
+  reboundsPerGame: number;
+  blocksPerGame: number;
+  stealsPerGame: number;
+};
+
+declare type topTeam = {
+  team: string;
+  wins: number;
+};
+
+declare type teamDef = {
+  team: string;
+  defensiveRating: number;
+};
+
+declare type teamPerf = {
+  name: string;
+  wins: number;
+  games: number;
+  performance: number[];
+};
+
+declare type TeamPerformance = {
+  name: string;
+  performance: number[];
+};

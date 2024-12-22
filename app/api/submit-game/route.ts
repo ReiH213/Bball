@@ -28,9 +28,6 @@ export async function POST(request: Request) {
         const existingMatchDays = existingPlayer?.matchDays || [];
 
         const currentMatchDay = player.matchDays[0];
-        if (player.name === "Trae Young") {
-          console.log(currentMatchDay);
-        }
 
         const updatedMatchDays = existingMatchDays.map((day: any) => {
           if (day.match?._ref === match._id) {
@@ -54,9 +51,6 @@ export async function POST(request: Request) {
           }
           return day; // Keep other matchDays unchanged
         });
-        if (player.name === "Trae Young") {
-          console.log(updatedMatchDays);
-        }
 
         const isMatchDayExists = existingMatchDays.some(
           (day: any) => day.match?._ref === player.matchDays[0].match?._ref
