@@ -36,7 +36,9 @@ const Timer = () => {
     const minutes = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     const millis = milliseconds % 1000;
-    return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}:${Math.floor(millis / 10)
+    return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}:${Math.floor(
+      millis / 10
+    )
       .toString()
       .padStart(2, "0")}`;
   };
@@ -61,29 +63,29 @@ const Timer = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center bg-[#492e21] p-4 rounded-md shadow-lg mt-8 w-72 mx-auto">
-      <div className="text-4xl font-bold text-white mb-4">
+    <div className="flex flex-row w-fit gap-x-10  divide-x-4  items-center justify-between bg-[#492e21] p-4 rounded-md shadow-lg mt-8  mx-auto">
+      <div className="text-4xl font-bold text-white">
         {formatTime(timeRemaining)}
       </div>
 
-      <div className="text-lg text-white mb-4">Quarter: {quarter} / 4</div>
+      <div className="text-lg text-white ">Quarter: {quarter} / 4</div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 font-semibold">
         <button
           onClick={startTimer}
-          className="p-2 bg-black text-white rounded-lg hover:bg-white hover:text-black"
+          className="p-2 bg-green-700 text-white rounded-lg hover:bg-green-400 hover:text-white"
         >
           Start
         </button>
         <button
           onClick={stopTimer}
-          className="p-2 bg-yellow-500 text-white rounded-lg hover:bg-white hover:text-black"
+          className="p-2 bg-yellow-700 text-white rounded-lg hover:bg-yellow-400 hover:text-black"
         >
           Pause
         </button>
         <button
           onClick={resetTimer}
-          className="p-2 bg-red-500 text-white rounded-lg hover:bg-white hover:text-black"
+          className="p-2 bg-red-700 text-white rounded-lg hover:bg-red-400 hover:text-black"
         >
           Reset
         </button>

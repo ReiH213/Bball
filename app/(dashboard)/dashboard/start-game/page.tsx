@@ -25,7 +25,6 @@ const page = () => {
       <div className="flex flex-col mt-10 gap-32  items-center justify-center">
         <SelectTeam />
       </div>
-      <Timer />
     </section>
   );
 };
