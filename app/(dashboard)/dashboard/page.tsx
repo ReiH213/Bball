@@ -2,6 +2,7 @@ import HomeHero from "@/components/HomeHero";
 import LineChart from "@/components/LineChart";
 import RadarChart from "@/components/RadarChart";
 import TitleComponent from "@/components/TitleComponent";
+import TopDefensivePlayers from "@/components/TopDefPlayers";
 import TopDefTeams from "@/components/TopDefTeams";
 import TopPlayer from "@/components/TopPlayer";
 import TopTeams from "@/components/TopTeams";
@@ -10,6 +11,7 @@ import {
   calculatePlayerStatsPerGame,
   calculateTeamPerformanceFromMatches,
   calculateTeamWins,
+  getTopDefensivePlayers,
   getTopTeamsByPerformance,
 } from "@/lib/utils";
 import {
@@ -30,6 +32,7 @@ const HomePage = async () => {
   );
   const top10Players = sortedPlayers.slice(0, 10);
 
+  const topDefensivePlayers = getTopDefensivePlayers(players);
   const matches = await fetchMatchesFromSanity();
   const topTeams = await calculateTeamWins(matches);
 
@@ -52,6 +55,7 @@ const HomePage = async () => {
       <div className="flex flex-row gap-x-3">
         <TopDefTeams teams={topDefTeams} />
         <TopTeams teams={topTeams} />
+        <TopDefensivePlayers players={topDefensivePlayers} />
         <TopPlayer players={top10Players} />
       </div>
     </div>

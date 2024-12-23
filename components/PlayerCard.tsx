@@ -32,11 +32,11 @@ import { fetchMatchFromSanityByRef } from "@/sanity/lib/queries";
 const PlayerCard = ({ name, player }: { name?: string; player: Player }) => {
   const playerFromImage = playerIMgs.find((p) => p.name === name);
 
-  const fetchMatchName = async (matchRef: string) => {
+  const fetchMatchName = async (matchRef: string, index: number) => {
     // Return cached name if available
-
     try {
       const matchName = await fetchMatchFromSanityByRef(matchRef);
+
       if (matchName) {
         return (
           <h1 className="flex flex-row min-w-fit items-center gap-x-3">
@@ -122,7 +122,7 @@ const PlayerCard = ({ name, player }: { name?: string; player: Player }) => {
               <TableCell>
                 {" "}
                 {matchDay.match?._ref
-                  ? fetchMatchName(matchDay.match._ref) || "Loading..."
+                  ? fetchMatchName(matchDay.match._ref, index) || "Loading..."
                   : "No Match"}
               </TableCell>
               <TableCell>
@@ -232,7 +232,7 @@ const PlayerCard = ({ name, player }: { name?: string; player: Player }) => {
         </div>
       </DialogTrigger>
       <DialogContent
-        className="w-full max-w-[1200px]"
+        className="w-full max-w-[1200px] overflow-y-auto max-h-[600px]"
         style={{
           width: "90vw", // Ensures the dialog uses 90% of the viewport width
           maxWidth: "1200px", // Prevents it from becoming too large

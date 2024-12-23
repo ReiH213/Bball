@@ -63,14 +63,16 @@ const Timer = () => {
   };
 
   return (
-    <div className="flex flex-row w-fit gap-x-10  divide-x-4  items-center justify-between bg-[#492e21] p-4 rounded-md shadow-lg mt-8  mx-auto">
+    <div className="flex flex-row w-fit gap-x-10  divide-x-4   items-center justify-between bg-[#492e21] p-4 rounded-md shadow-lg mt-8  mx-auto">
       <div className="text-4xl font-bold text-white">
         {formatTime(timeRemaining)}
       </div>
 
-      <div className="text-lg text-white ">Quarter: {quarter} / 4</div>
+      <div className="text-lg text-white pl-8 h-10 items-center pt-1">
+        Quarter: {quarter} / 4
+      </div>
 
-      <div className="flex gap-4 font-semibold">
+      <div className="flex gap-4 font-semibold pl-8">
         <button
           onClick={startTimer}
           className="p-2 bg-green-700 text-white rounded-lg hover:bg-green-400 hover:text-white"
@@ -91,7 +93,11 @@ const Timer = () => {
         </button>
       </div>
 
-      {pause && <div className="text-xl text-white mt-4">Game Paused</div>}
+      {pause && (
+        <div className="text-xl text-white  items-center  pl-8 h-10 pt-1">
+          Game Paused
+        </div>
+      )}
     </div>
   );
 };

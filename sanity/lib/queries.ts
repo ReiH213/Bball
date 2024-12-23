@@ -97,7 +97,11 @@ export const fetchMatchFromSanityByRef = async (matchRef: string) => {
   _id,date,firstTeam,secondTeam,score,winner
 }`;
 
-  return await client.fetch(query, { matchRef });
+  const result = await client.fetch(query, { matchRef });
+
+  const foundMatch = result.filter((match: any) => match._id === matchRef);
+
+  return foundMatch;
 };
 
 export const fetchMatchesFromSanity = async () => {

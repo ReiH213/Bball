@@ -331,7 +331,9 @@ export const calculateDefensiveRating = (matches: DefMatch[]): teamDef[] => {
     if (!teamStats[match.secondTeam]) {
       teamStats[match.secondTeam] = { pointsAllowed: 0, possessions: 0 };
     }
-    teamStats[match.secondTeam].pointsAllowed += match.score.firstTeamScore;
+    if (match.score?.firstTeamScore) {
+      teamStats[match.secondTeam].pointsAllowed += match.score.firstTeamScore;
+    }
 
     const secondTeamOpponentStats = match.opponentStats.filter(
       (stat: any) => stat.team === match.firstTeam
@@ -447,3 +449,55 @@ export const formatLineChartData = (teams: TeamPerformance[]) => {
 
 const getRandomColor = () =>
   `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+
+export const calculateDefensivePerformance = (players: Player[]) => {
+  return players.map((player) => {
+    const totalBlocks = player.matchDays
+      ?.flatMap((day) => day.blocks || [])
+      .reduce((sum, block) => sum + (block.value || 0), 0);
+
+    const totalSteals = player.matchDays
+      ?.flatMap((day) => day.steals || [])
+      .reduce((sum, steal) => sum + (steal.value || 0), 0);
+
+    const totalDefRebounds = player.matchDays
+      ?.flatMap((day) => day.dRebounds || [])
+      .reduce((sum, rebound) => sum + (rebound.value || 0), 0);
+
+    const gamesPlayed = player.matchDays?.length || 1;
+
+    let blocksPerGame = 0;
+    let stealsPerGame = 0;
+    let defReboundsPerGame = 0;
+    // Calculate per-game stats
+    if (totalBlocks) {
+      blocksPerGame = totalBlocks / gamesPlayed;
+    }
+    if (totalSteals) {
+      stealsPerGame = totalSteals / gamesPlayed;
+    }
+    if (totalDefRebounds) {
+      defReboundsPerGame = totalDefRebounds / gamesPlayed;
+    }
+
+    // Defensive Score (you can customize this formula)
+    const defensiveScore =
+      blocksPerGame * 1.5 + stealsPerGame * 2 + defReboundsPerGame * 1;
+
+    return {
+      name: player.name,
+      defensiveScore,
+      blocksPerGame,
+      stealsPerGame,
+      defReboundsPerGame,
+    };
+  });
+};
+
+export const getTopDefensivePlayers = (players: Player[]) => {
+  const defensivePerformance = calculateDefensivePerformance(players);
+
+  return defensivePerformance
+    .sort((a, b) => b.defensiveScore - a.defensiveScore) // Sort by defensive score
+    .slice(0, 10); // Get the top 10 players
+};
