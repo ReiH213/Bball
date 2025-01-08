@@ -12,6 +12,7 @@ import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
 import LoadSpinner from "./LoadSpinner";
+import { motion } from "framer-motion";
 import Image from "next/image";
 const SelectTeam = () => {
   const [firstTeam, setFirstTeam] = useState<team | null>(null);
@@ -69,9 +70,14 @@ const SelectTeam = () => {
                 Coach: {firstTeam.coachName}
               </h1>
               <h1 className="font-semibold">Starting Five</h1>
-              <ul className="mt-1">
+              <ul className="mt-4 flex flex-col  gap-y-5 h-full">
                 {firstTeam.startingFive.map((player: string) => (
-                  <li key={player}>{player}</li>
+                  <li
+                    className="rounded-xl p-2 font-semibold bg-[#a67c5d]"
+                    key={player}
+                  >
+                    {player}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -97,14 +103,19 @@ const SelectTeam = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           {secondTeam !== null && (
-            <div className="flex flex-col rounded-md bg-[#492e21] text-white p-2  absolute mt-16 transition-all ease-in-out delay-300 ">
+            <div className="flex flex-col rounded-md bg-[#492e21] text-white p-2  absolute mt-16 transition-all ease-in-out delay-300 min-h-[308px]">
               <h1 className="font-semibold mb-2">
                 Coach: {secondTeam.coachName}
               </h1>
-              <h1 className="font-semibold">Starting Five</h1>
-              <ul className="mt-1">
+              <h1 className="font-bold">Starting Five</h1>
+              <ul className="mt-4 flex flex-col  gap-y-5 h-full">
                 {secondTeam.startingFive.map((player: string) => (
-                  <li key={player}>{player}</li>
+                  <li
+                    className="rounded-xl p-2 font-semibold bg-[#a67c5d]"
+                    key={player}
+                  >
+                    {player}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -126,7 +137,18 @@ const SelectTeam = () => {
           </h1>
         )}
         {firstTeam !== null && secondTeam !== null && (
-          <div className="rounded-lg p-3 justify-center flex flex-col gap-y-5 items-center bg-[#492e21] text-white hover:bg-[#9b6347] hover:text-white hover:shadow-md hover:shadow-black-0 ease-in-out transition-all delay-150 font-semibold hover:cursor-default min-h-[265px]">
+          <motion.div
+            initial={{
+              y: -600,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className="rounded-lg p-3 justify-center flex flex-col gap-y-5 items-center bg-[#492e21] text-white hover:bg-[#9b6347] hover:text-white ease-in-out  transition-colors  delay-150 font-semibold hover:cursor-default min-h-[432px]"
+          >
             <h1 className="mb-4">Upcoming Match</h1>
             <h1 className="rounded-md p-2 bottom-0 ">
               Match Day : {formatDate(Date())}
@@ -156,7 +178,7 @@ const SelectTeam = () => {
                 height={150}
               />
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
       <div className="flex flex-col mt-72 w-full max-w-md  text-center gap-y-4 items-center justify-center text-white">
